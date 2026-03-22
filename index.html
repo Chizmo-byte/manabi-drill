@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まなびドリル｜印刷対応ドリル自動生成</title>
+<link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#3b82f6;--blue-dark:#1d4ed8;--blue-light:#eff6ff;
+  --green:#22c55e;--green-dark:#15803d;
+  --orange:#f97316;--yellow:#fbbf24;
+  --pink:#ec4899;--purple:#8b5cf6;
+  --text:#1e293b;--text-sub:#64748b;
+  --border:#e2e8f0;--bg:#f1f5f9;
+  --radius:14px;--shadow:0 2px 16px rgba(30,41,59,0.09);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+header{background:linear-gradient(120deg,#1d4ed8 0%,#7c3aed 100%);padding:14px 24px 12px;text-align:center;box-shadow:0 4px 20px rgba(29,78,216,.25);}
+header h1{font-family:'Kaisei Decol',serif;font-size:1.6rem;color:#fff;letter-spacing:.06em;}
+header p{color:rgba(255,255,255,.78);font-size:.78rem;margin-top:2px;}
+
+.app{display:flex;min-height:calc(100vh - 58px);}
+.sidebar{width:300px;min-width:255px;background:#fff;border-right:1px solid var(--border);padding:14px 13px 24px;overflow-y:auto;flex-shrink:0;}
+.main-area{flex:1;padding:18px 16px;overflow-y:auto;}
+@media(max-width:720px){.app{flex-direction:column;}.sidebar{width:100%;border-right:none;border-bottom:2px solid var(--border);}}
+
+.sec{margin-bottom:16px;}
+.sec-title{font-size:.68rem;font-weight:700;color:var(--text-sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+
+.subject-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.stab{border:2px solid var(--border);border-radius:9px;padding:8px 4px 6px;cursor:pointer;background:#f8fafc;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.75rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;transition:all .14s;color:var(--text-sub);line-height:1.3;text-align:center;}
+.stab .em{font-size:1.25rem;}
+.stab:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+.stab.active{border-color:var(--blue);background:var(--blue-light);color:var(--blue-dark);}
+.stab[data-s="kanji"].active{border-color:var(--orange);background:#fff7ed;color:#c2410c;}
+.stab[data-s="keisan"].active{border-color:var(--green);background:#f0fdf4;color:var(--green-dark);}
+.stab[data-s="english"].active{border-color:var(--purple);background:#f5f3ff;color:#5b21b6;}
+.stab[data-s="kana"].active{border-color:var(--pink);background:#fdf2f8;color:#9d174d;}
+
+.grade-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.gpill{border:2px solid var(--border);border-radius:50px;padding:3px 12px;cursor:pointer;background:#f8fafc;font-size:.75rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:var(--text-sub);transition:all .13s;}
+.gpill:hover{border-color:var(--blue);color:var(--blue);}
+.gpill.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+.gpill.disabled{opacity:.28;cursor:not-allowed;pointer-events:none;}
+
+.unit-list{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;}
+.ucheck,.gcheck{display:flex;align-items:center;gap:6px;padding:5px 8px;border:2px solid var(--border);border-radius:7px;cursor:pointer;background:#f8fafc;font-size:.77rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:var(--text-sub);transition:all .12s;}
+.ucheck:hover{border-color:var(--green);color:var(--green-dark);}
+.ucheck.active{border-color:var(--green);background:#f0fdf4;color:var(--green-dark);}
+.ucheck.active .ck{background:var(--green);border-color:var(--green);color:#fff;}
+.gcheck:hover{border-color:var(--purple);}
+.gcheck.active{border-color:var(--purple);background:#f5f3ff;color:#5b21b6;}
+.gcheck.active .ck{background:var(--purple);border-color:var(--purple);color:#fff;}
+.ck{width:14px;height:14px;border:2px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.6rem;}
+
+.genre-list{display:flex;flex-direction:column;gap:4px;}
+.eng-opts{display:flex;flex-direction:column;gap:5px;}
+.eopt{border:2px solid var(--border);border-radius:8px;padding:6px 9px;cursor:pointer;background:#f8fafc;font-size:.75rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;color:var(--text-sub);transition:all .12s;}
+.eopt:hover{border-color:var(--purple);}
+.eopt.active{border-color:var(--purple);background:#f5f3ff;color:#5b21b6;}
+.eopt-sub{font-size:.67rem;font-weight:400;color:var(--text-sub);margin-top:1px;}
+
+.row-ctrl{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px;}
+.row-ctrl label{font-size:.77rem;font-weight:700;white-space:nowrap;}
+.sel{border:2px solid var(--border);border-radius:6px;padding:4px 9px;font-size:.77rem;font-family:'Noto Sans JP',sans-serif;background:#f8fafc;color:var(--text);outline:none;cursor:pointer;}
+.sel:focus{border-color:var(--blue);}
+
+.gen-btn{width:100%;padding:12px;background:linear-gradient(90deg,var(--blue-dark),var(--purple));color:#fff;border:none;border-radius:10px;font-size:.92rem;font-weight:700;font-family:'Kaisei Decol',serif;cursor:pointer;letter-spacing:.05em;box-shadow:0 4px 12px rgba(29,78,216,.26);transition:all .16s;margin-top:4px;}
+.gen-btn:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(29,78,216,.32);}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-sub);}
+.empty-state .big{font-size:3rem;margin-bottom:10px;}
+
+.toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.toolbar-title{font-family:'Kaisei Decol',serif;font-size:1.05rem;color:var(--blue-dark);}
+.print-btn{background:var(--yellow);border:none;border-radius:8px;padding:7px 16px;font-size:.85rem;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer;color:#78350f;transition:all .13s;}
+.print-btn:hover{background:#f59e0b;}
+
+.drill-page{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px 18px;margin-bottom:16px;box-shadow:var(--shadow);}
+.page-label{font-size:.66rem;font-weight:700;color:var(--text-sub);letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.page-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.drill-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.drill-name{font-family:'Kaisei Decol',serif;font-size:1rem;color:var(--text);}
+.score-box{font-size:.78rem;color:var(--text-sub);border:1px solid var(--border);border-radius:6px;padding:3px 10px;}
+
+.drill-instr{font-size:.86rem;font-weight:700;color:var(--text);margin-bottom:9px;padding:4px 10px;background:#fff7ed;border-left:3px solid var(--orange);border-radius:0 6px 6px 0;}
+.drill-instr.blue{background:#eff6ff;border-color:var(--blue);}
+.drill-instr.purple{background:#f5f3ff;border-color:var(--purple);}
+.drill-instr.pink{background:#fdf2f8;border-color:var(--pink);}
+.drill-instr.green{background:#f0fdf4;border-color:var(--green);}
+
+/* 漢字 */
+.k-sec{margin-bottom:18px;}
+.k-row{display:flex;align-items:baseline;margin-bottom:4px;font-size:.97rem;line-height:2.2;font-family:'Noto Serif JP',serif;}
+.k-row .qn{font-size:.66rem;font-weight:700;color:var(--orange);width:22px;flex-shrink:0;}
+.k-row .qt{flex:1;}
+.blank{display:inline-block;min-width:52px;border-bottom:1.5px solid #94a3b8;margin:0 2px;vertical-align:bottom;}
+
+/* 通常計算 */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+.c-row{display:flex;align-items:center;border-bottom:1px dotted var(--border);font-family:'Noto Serif JP',serif;padding:6px 0;}
+.c-row .qn{font-size:.66rem;font-weight:700;color:var(--green-dark);width:24px;flex-shrink:0;}
+.c-row .formula{flex:1;display:flex;align-items:center;gap:4px;}
+.ans-line{display:inline-block;min-width:50px;border-bottom:1.5px solid #94a3b8;}
+
+/* 筆算 */
+.hissan-grid{display:grid;gap:10px;margin-top:4px;width:100%;}
+.hissan-card{border:1.5px solid var(--border);border-radius:8px;padding:8px 10px 6px;min-width:0;overflow:hidden;}
+.hissan-card .qn-lbl{font-size:.66rem;font-weight:700;color:var(--green-dark);margin-bottom:4px;}
+.hissan-problem{font-family:'Noto Serif JP',serif;font-size:.92rem;font-weight:700;white-space:normal;word-break:break-all;margin-bottom:6px;}
+.dot-grid{width:100%;background-image:radial-gradient(circle,#b8c8dc 1px,transparent 1px);background-size:8px 8px;border-radius:4px;border:1px solid #dde6f0;}
+
+/* 分数 */
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;line-height:1.1;}
+.frac-n{border-bottom:1.5px solid currentColor;padding:0 3px 1px;font-size:.9em;min-width:1.1em;text-align:center;}
+.frac-d{padding:1px 3px 0;font-size:.9em;min-width:1.1em;text-align:center;}
+
+/* 英語 */
+.e-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px dotted var(--border);}
+.e-row .qn{font-size:.66rem;font-weight:700;color:var(--purple);width:20px;flex-shrink:0;}
+.e-row .jp{font-size:.88rem;min-width:75px;max-width:95px;}
+.tracing-guide{font-size:.97rem;color:#c4b5fd;letter-spacing:.13em;}
+.tracing-reading{font-size:.6rem;color:var(--text-sub);display:block;}
+.write-line{flex:1;border-bottom:1.5px solid #94a3b8;height:24px;min-width:90px;}
+.furi-wrap{display:flex;flex-direction:column;flex:1;}
+.furi-r{font-size:.6rem;color:var(--text-sub);}
+.furi-line{border-bottom:1.5px solid #94a3b8;width:100%;min-height:22px;display:block;}
+
+/* かな */
+.kana-row{display:flex;align-items:baseline;padding:5px 0;border-bottom:1px dotted var(--border);font-family:'Noto Serif JP',serif;}
+.kana-row .qn{font-size:.66rem;font-weight:700;color:var(--pink);width:20px;flex-shrink:0;}
+.kana-row .kt{font-size:.94rem;flex:1;}
+
+.error-box{background:#fef2f2;border:2px solid #fca5a5;border-radius:10px;padding:14px 18px;color:#b91c1c;font-size:.88rem;}
+
+/* ===== 印刷 A4縦 ===== */
+@media print{
+  @page{size:A4 portrait;margin:14mm 16mm 12mm 16mm;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{background:#fff;font-size:10pt;}
+  header,.sidebar,.toolbar,.print-btn{display:none!important;}
+  .app{display:block;}.main-area{padding:0;}
+  .drill-page{box-shadow:none;border:none;border-radius:0;margin:0;padding:0;page-break-after:always;break-after:page;width:100%;}
+  .drill-page:last-child{page-break-after:avoid;break-after:avoid;}
+  .page-label{font-size:7pt;margin-bottom:6pt;}
+  .drill-title-row{margin-bottom:10pt;}
+  .drill-name{font-size:13pt;font-weight:700;}
+  .score-box{font-size:9pt;border:1pt solid #aaa;padding:2pt 8pt;}
+  .drill-instr{font-size:9pt;padding:3pt 9pt;margin-bottom:6pt;}
+  .k-sec{margin-bottom:12pt;}
+  .k-row{font-size:11pt;line-height:2.2;}
+  .blank{min-width:42pt;border-bottom:1pt solid #888;}
+  .calc-grid{grid-template-columns:1fr 1fr;column-gap:20pt;}
+  .c-row{font-size:12pt;padding:5pt 0;border-bottom:1px dotted #ccc;}
+  .ans-line{min-width:42pt;border-bottom:1pt solid #888;}
+  .hissan-grid{gap:6pt;display:grid;}
+  .hissan-card{border:1pt solid #bbb;border-radius:4pt;padding:5pt 7pt 4pt;overflow:hidden;min-width:0;}
+  .hissan-card .qn-lbl{font-size:7pt;margin-bottom:3pt;}
+  .hissan-problem{font-size:9pt;margin-bottom:4pt;white-space:normal;word-break:break-all;overflow:hidden;}
+  .dot-grid{background-image:radial-gradient(circle,#aab8c8 1px,transparent 1px)!important;background-size:5pt 5pt!important;border:1pt solid #ccc!important;min-height:62pt!important;}
+  .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2pt;}
+  .frac-n{border-bottom:1pt solid currentColor;padding:0 2pt 1pt;font-size:9pt;min-width:10pt;text-align:center;}
+  .frac-d{padding:1pt 2pt 0;font-size:9pt;min-width:10pt;text-align:center;}
+  .e-row{font-size:10pt;padding:5pt 0;border-bottom:1px dotted #ccc;}
+  .tracing-guide{font-size:10.5pt;color:#c4b5fd;}
+  .tracing-reading{font-size:7pt;}
+  .e-row .jp{min-width:58pt;max-width:80pt;}
+  .write-line{border-bottom:1pt solid #888;height:22pt;}
+  .furi-line{border-bottom:1pt solid #888;min-height:20pt;}
+  .furi-r{font-size:7pt;}
+  .kana-row{font-size:11pt;padding:5pt 0;border-bottom:1px dotted #ccc;}
+  .kana-row .blank{min-width:42pt;border-bottom:1pt solid #888;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 まなびドリル</h1>
+  <p>科目・学年・ページ数を選んで、A4印刷対応ドリルを自動生成</p>
+</header>
+<div class="app">
+<aside class="sidebar">
+  <div class="sec">
+    <div class="sec-title">📚 科目</div>
+    <div class="subject-tabs">
+      <button class="stab active" data-s="kanji"><span class="em">📝</span>漢字</button>
+      <button class="stab" data-s="keisan"><span class="em">🔢</span>算数</button>
+      <button class="stab" data-s="english"><span class="em">🔤</span>英単語</button>
+      <button class="stab" data-s="kana"><span class="em">🌸</span>ひらがな・かたかな</button>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">🎓 学年</div>
+    <div class="grade-pills">
+      <button class="gpill active" data-g="1">小1</button>
+      <button class="gpill" data-g="2">小2</button>
+      <button class="gpill" data-g="3">小3</button>
+      <button class="gpill" data-g="4">小4</button>
+      <button class="gpill" data-g="5">小5</button>
+      <button class="gpill" data-g="6">小6</button>
+    </div>
+  </div>
+  <div class="sec" id="calc-sec" style="display:none">
+    <div class="sec-title">➕ 単元（複数選択可）</div>
+    <div class="unit-list" id="unit-list"></div>
+  </div>
+  <div class="sec" id="eng-genre-sec" style="display:none">
+    <div class="sec-title">🏷️ 語彙ジャンル（複数可）</div>
+    <div class="genre-list" id="genre-list"></div>
+  </div>
+  <div class="sec" id="eng-mode-sec" style="display:none">
+    <div class="sec-title">✍️ 表示スタイル</div>
+    <div class="eng-opts">
+      <div class="eopt active" data-e="tracing">なぞり書き＋読み仮名<div class="eopt-sub">低・中学年向け</div></div>
+      <div class="eopt" data-e="furigana">フリガナあり（書き線）<div class="eopt-sub">高学年向け</div></div>
+      <div class="eopt" data-e="nofuri">フリガナなし<div class="eopt-sub">高学年・応用</div></div>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">📄 ページ・問題数</div>
+    <div class="row-ctrl">
+      <label>ページ数：</label>
+      <select class="sel" id="pages-sel">
+        <option value="1">1ページ</option><option value="2">2ページ</option>
+        <option value="3">3ページ</option><option value="4">4ページ</option><option value="5">5ページ</option>
+      </select>
+    </div>
+    <div class="row-ctrl">
+      <label>1ページの問題数：</label>
+      <select class="sel" id="count-sel">
+        <option value="5">5問</option><option value="10" selected>10問</option>
+        <option value="15">15問</option><option value="20">20問</option>
+      </select>
+    </div>
+  </div>
+  <button class="gen-btn" id="gen-btn">✨ ドリルを作る！</button>
+</aside>
+<main class="main-area" id="main-area">
+  <div class="empty-state"><div class="big">📋</div><p>左のメニューで設定して<br>「ドリルを作る！」を押してください</p></div>
+</main>
+</div>
+
+<script>
+/* ================================================================
+   漢字プール（学年別）
+   各エントリ: {k:漢字, r:読み, s:例文（ひらがな→漢字 or 漢字→ひらがな）}
+   yomi問題: 【漢字】を含む文、kaki問題: （よみ）を含む文
+   ================================================================ */
+const KANJI = {
+  1:[
+    {k:'山',r:'やま',y:'【山】に のぼる。',ky:'（やま）に のぼる。'},
+    {k:'川',r:'かわ',y:'【川】で およぐ。',ky:'（かわ）で およぐ。'},
+    {k:'田',r:'た',y:'【田】んぼ に カエルが いる。',ky:'（た）んぼ に カエルが いる。'},
+    {k:'日',r:'ひ',y:'きょうは【日】ようびだ。',ky:'きょうは（ひ）ようびだ。'},
+    {k:'月',r:'つき',y:'夜に【月】が かがやく。',ky:'よるに（つき）が かがやく。'},
+    {k:'火',r:'ひ',y:'【火】に きを つける。',ky:'（ひ）に きを つける。'},
+    {k:'水',r:'みず',y:'【水】を のむ。',ky:'（みず）を のむ。'},
+    {k:'木',r:'き',y:'【木】に とりが とまる。',ky:'（き）に とりが とまる。'},
+    {k:'金',r:'きん',y:'【金】の メダルを もらう。',ky:'（きん）の メダルを もらう。'},
+    {k:'土',r:'つち',y:'【土】を ほる。',ky:'（つち）を ほる。'},
+    {k:'人',r:'ひと',y:'たくさんの【人】が あつまる。',ky:'たくさんの（ひと）が あつまる。'},
+    {k:'口',r:'くち',y:'大きな【口】を あける。',ky:'おおきな（くち）を あける。'},
+    {k:'手',r:'て',y:'【手】を あらう。',ky:'（て）を あらう。'},
+    {k:'足',r:'あし',y:'【足】が はやい。',ky:'（あし）が はやい。'},
+    {k:'目',r:'め',y:'【目】を とじる。',ky:'（め）を とじる。'},
+    {k:'耳',r:'みみ',y:'【耳】を すます。',ky:'（みみ）を すます。'},
+    {k:'犬',r:'いぬ',y:'【犬】が なく。',ky:'（いぬ）が なく。'},
+    {k:'花',r:'はな',y:'きれいな【花】が さく。',ky:'きれいな（はな）が さく。'},
+    {k:'草',r:'くさ',y:'みどりの【草】が しげる。',ky:'みどりの（くさ）が しげる。'},
+    {k:'石',r:'いし',y:'川の【石】を ひろう。',ky:'かわの（いし）を ひろう。'},
+    {k:'上',r:'うえ',y:'たなの【上】に おく。',ky:'たなの（うえ）に おく。'},
+    {k:'下',r:'した',y:'つくえの【下】に もぐる。',ky:'つくえの（した）に もぐる。'},
+    {k:'大',r:'おお',y:'【大】きな こえで よぶ。',ky:'（おお）きな こえで よぶ。'},
+    {k:'小',r:'ちい',y:'【小】さな むしを みつける。',ky:'（ちい）さな むしを みつける。'},
+    {k:'中',r:'なか',y:'はこの【中】に はいる。',ky:'はこの（なか）に はいる。'},
+    {k:'右',r:'みぎ',y:'【右】に まがる。',ky:'（みぎ）に まがる。'},
+    {k:'左',r:'ひだり',y:'【左】を むく。',ky:'（ひだり）を むく。'},
+    {k:'子',r:'こ',y:'げんきな【子】が あそぶ。',ky:'げんきな（こ）が あそぶ。'},
+    {k:'女',r:'おんな',y:'【女】の こが わらう。',ky:'（おんな）の こが わらう。'},
+    {k:'男',r:'おとこ',y:'【男】の こが はしる。',ky:'（おとこ）の こが はしる。'},
+  ],
+  2:[
+    {k:'春',r:'はる',y:'【春】に はなが さく。',ky:'（はる）に はなが さく。'},
+    {k:'夏',r:'なつ',y:'【夏】は あつい。',ky:'（なつ）は あつい。'},
+    {k:'秋',r:'あき',y:'【秋】に もみじが あかくなる。',ky:'（あき）に もみじが あかくなる。'},
+    {k:'冬',r:'ふゆ',y:'【冬】は ゆきが ふる。',ky:'（ふゆ）は ゆきが ふる。'},
+    {k:'朝',r:'あさ',y:'【朝】ごはんを たべる。',ky:'（あさ）ごはんを たべる。'},
+    {k:'昼',r:'ひる',y:'【昼】に おべんとうを たべる。',ky:'（ひる）に おべんとうを たべる。'},
+    {k:'夜',r:'よる',y:'【夜】は ほしが きれいだ。',ky:'（よる）は ほしが きれいだ。'},
+    {k:'海',r:'うみ',y:'【海】で およぐ。',ky:'（うみ）で およぐ。'},
+    {k:'池',r:'いけ',y:'【池】の コイに えさを やる。',ky:'（いけ）の コイに えさを やる。'},
+    {k:'森',r:'もり',y:'【森】の なかを あるく。',ky:'（もり）の なかを あるく。'},
+    {k:'魚',r:'さかな',y:'【魚】を つる。',ky:'（さかな）を つる。'},
+    {k:'鳥',r:'とり',y:'【鳥】が そらを とぶ。',ky:'（とり）が そらを とぶ。'},
+    {k:'牛',r:'うし',y:'【牛】が くさを たべる。',ky:'（うし）が くさを たべる。'},
+    {k:'馬',r:'うま',y:'【馬】に のる。',ky:'（うま）に のる。'},
+    {k:'父',r:'ちち',y:'【父】と さんぽする。',ky:'（ちち）と さんぽする。'},
+    {k:'母',r:'はは',y:'【母】が りょうりを する。',ky:'（はは）が りょうりを する。'},
+    {k:'兄',r:'あに',y:'【兄】は サッカーが じょうずだ。',ky:'（あに）は サッカーが じょうずだ。'},
+    {k:'姉',r:'あね',y:'【姉】と いっしょに あるく。',ky:'（あね）と いっしょに あるく。'},
+    {k:'弟',r:'おとうと',y:'【弟】と あそぶ。',ky:'（おとうと）と あそぶ。'},
+    {k:'妹',r:'いもうと',y:'【妹】の てを ひく。',ky:'（いもうと）の てを ひく。'},
+    {k:'読',r:'よ',y:'本を【読】む。',ky:'ほんを（よ）む。'},
+    {k:'書',r:'か',y:'じを【書】く。',ky:'じを（か）く。'},
+    {k:'聞',r:'き',y:'おんがくを【聞】く。',ky:'おんがくを（き）く。'},
+    {k:'話',r:'はな',y:'ともだちと【話】す。',ky:'ともだちと（はな）す。'},
+    {k:'走',r:'はし',y:'グラウンドを【走】る。',ky:'グラウンドを（はし）る。'},
+    {k:'来',r:'き',y:'ともだちが【来】た。',ky:'ともだちが（き）た。'},
+    {k:'行',r:'い',y:'がっこうに【行】く。',ky:'がっこうに（い）く。'},
+    {k:'見',r:'み',y:'テレビを【見】る。',ky:'テレビを（み）る。'},
+    {k:'食',r:'た',y:'りんごを【食】べる。',ky:'りんごを（た）べる。'},
+    {k:'買',r:'か',y:'スーパーで ものを【買】う。',ky:'スーパーで ものを（か）う。'},
+  ],
+  3:[
+    {k:'委',r:'い',y:'【委】員かいに でる。',ky:'（い）いんかいに でる。'},
+    {k:'意',r:'い',y:'【意】見を いう。',ky:'（い）けんを いう。'},
+    {k:'育',r:'そだ',y:'はなを【育】てる。',ky:'はなを（そだ）てる。'},
+    {k:'員',r:'いん',y:'かいしゃの【員】になる。',ky:'かいしゃの（いん）になる。'},
+    {k:'院',r:'いん',y:'びょう【院】にいく。',ky:'びょう（いん）にいく。'},
+    {k:'運',r:'うん',y:'【運】どうかいがある。',ky:'（うん）どうかいがある。'},
+    {k:'泳',r:'およ',y:'プールで【泳】ぐ。',ky:'プールで（およ）ぐ。'},
+    {k:'駅',r:'えき',y:'【駅】まで あるく。',ky:'（えき）まで あるく。'},
+    {k:'温',r:'あたた',y:'スープが【温】かい。',ky:'スープが（あたた）かい。'},
+    {k:'化',r:'か',y:'へん【化】する。',ky:'へん（か）する。'},
+    {k:'荷',r:'に',y:'おも い【荷】もつを はこぶ。',ky:'おもい（に）もつを はこぶ。'},
+    {k:'界',r:'かい',y:'せ【界】を たびする。',ky:'せ（かい）を たびする。'},
+    {k:'感',r:'かん',y:'【感】しゃする。',ky:'（かん）しゃする。'},
+    {k:'期',r:'き',y:'がっ【期】がはじまる。',ky:'がっ（き）がはじまる。'},
+    {k:'客',r:'きゃく',y:'おみせに【客】がくる。',ky:'おみせに（きゃく）がくる。'},
+    {k:'急',r:'いそ',y:'【急】いでいく。',ky:'（いそ）いでいく。'},
+    {k:'宮',r:'みや',y:'じん【宮】にまいる。',ky:'じん（みや）にまいる。'},
+    {k:'球',r:'たま',y:'【球】を なげる。',ky:'（たま）を なげる。'},
+    {k:'去',r:'さ',y:'なつが【去】った。',ky:'なつが（さ）った。'},
+    {k:'橋',r:'はし',y:'【橋】をわたる。',ky:'（はし）をわたる。'},
+    {k:'業',r:'ぎょう',y:'じゅ【業】をうける。',ky:'じゅ（ぎょう）をうける。'},
+    {k:'曲',r:'きょく',y:'おんがくの【曲】をきく。',ky:'おんがくの（きょく）をきく。'},
+    {k:'局',r:'きょく',y:'ゆうびん【局】にいく。',ky:'ゆうびん（きょく）にいく。'},
+    {k:'銀',r:'ぎん',y:'【銀】いろのメダル。',ky:'（ぎん）いろのメダル。'},
+    {k:'苦',r:'くる',y:'べんきょうに【苦】しむ。',ky:'べんきょうに（くる）しむ。'},
+    {k:'具',r:'ぐ',y:'どう【具】をつかう。',ky:'どう（ぐ）をつかう。'},
+    {k:'君',r:'きみ',y:'【君】はだれだ？',ky:'（きみ）はだれだ？'},
+    {k:'係',r:'かかり',y:'きゅうしょく【係】になる。',ky:'きゅうしょく（かかり）になる。'},
+    {k:'港',r:'みなと',y:'【港】からふねがでる。',ky:'（みなと）からふねがでる。'},
+    {k:'号',r:'ごう',y:'なん【号】のバスにのる？',ky:'なん（ごう）のバスにのる？'},
+  ],
+  4:[
+    {k:'愛',r:'あい',y:'【愛】情をそそぐ。',ky:'（あい）じょうをそそぐ。'},
+    {k:'案',r:'あん',y:'いい【案】がうかんだ。',ky:'いい（あん）がうかんだ。'},
+    {k:'以',r:'い',y:'10【以】上の数。',ky:'10（い）じょうの数。'},
+    {k:'位',r:'い',y:'1【位】になる。',ky:'1（い）になる。'},
+    {k:'囲',r:'かこ',y:'えんぴつで【囲】む。',ky:'えんぴつで（かこ）む。'},
+    {k:'印',r:'しるし',y:'まるい【印】をつける。',ky:'まるい（しるし）をつける。'},
+    {k:'栄',r:'さか',y:'まちが【栄】える。',ky:'まちが（さか）える。'},
+    {k:'塩',r:'しお',y:'【塩】をくわえる。',ky:'（しお）をくわえる。'},
+    {k:'億',r:'おく',y:'100【億】えんのたてもの。',ky:'100（おく）えんのたてもの。'},
+    {k:'加',r:'くわ',y:'水を【加】える。',ky:'みずを（くわ）える。'},
+    {k:'果',r:'くだもの',y:'新鮮な【果】物を食べる。',ky:'しんせんな（くだもの）をたべる。'},
+    {k:'貨',r:'か',y:'かん【貨】がはしる。',ky:'かん（か）がはしる。'},
+    {k:'改',r:'あらた',y:'ルールを【改】める。',ky:'ルールを（あらた）める。'},
+    {k:'械',r:'かい',y:'き【械】がこわれる。',ky:'き（かい）がこわれる。'},
+    {k:'各',r:'かく',y:'【各】地からあつまる。',ky:'（かく）ちからあつまる。'},
+    {k:'覚',r:'おぼ',y:'かんじを【覚】える。',ky:'かんじを（おぼ）える。'},
+    {k:'完',r:'かん',y:'しゅくだいが【完】成した。',ky:'しゅくだいが（かん）せいした。'},
+    {k:'官',r:'かん',y:'【官】ちょうにつとめる。',ky:'（かん）ちょうにつとめる。'},
+    {k:'管',r:'くだ',y:'みずが【管】をながれる。',ky:'みずが（くだ）をながれる。'},
+    {k:'関',r:'かん',y:'学校に【関】けいするもの。',ky:'がっこうに（かん）けいするもの。'},
+    {k:'観',r:'み',y:'えいがを【観】る。',ky:'えいがを（み）る。'},
+    {k:'願',r:'ねが',y:'合格を【願】う。',ky:'ごうかくを（ねが）う。'},
+    {k:'希',r:'き',y:'【希】望をもつ。',ky:'（き）ぼうをもつ。'},
+    {k:'季',r:'き',y:'【季】節がかわる。',ky:'（き）せつがかわる。'},
+    {k:'旗',r:'はた',y:'日本の【旗】をあげる。',ky:'にほんの（はた）をあげる。'},
+    {k:'機',r:'き',y:'ひこう【機】にのる。',ky:'ひこう（き）にのる。'},
+    {k:'議',r:'ぎ',y:'かい【議】をひらく。',ky:'かい（ぎ）をひらく。'},
+    {k:'求',r:'もと',y:'こたえを【求】める。',ky:'こたえを（もと）める。'},
+    {k:'泣',r:'な',y:'かなしくて【泣】く。',ky:'かなしくて（な）く。'},
+    {k:'競',r:'きそ',y:'はやさを【競】う。',ky:'はやさを（きそ）う。'},
+  ],
+  5:[
+    {k:'圧',r:'あつ',y:'き【圧】をはかる。',ky:'き（あつ）をはかる。'},
+    {k:'移',r:'うつ',y:'いえを【移】る。',ky:'いえを（うつ）る。'},
+    {k:'因',r:'いん',y:'げん【因】をしらべる。',ky:'げん（いん）をしらべる。'},
+    {k:'永',r:'えい',y:'【永】遠につづく。',ky:'（えい）えんにつづく。'},
+    {k:'営',r:'いとな',y:'みせを【営】む。',ky:'みせを（いとな）む。'},
+    {k:'衛',r:'えい',y:'じ【衛】たいにはいる。',ky:'じ（えい）たいにはいる。'},
+    {k:'易',r:'い',y:'貿【易】がさかんだ。',ky:'ぼう（い）がさかんだ。'},
+    {k:'益',r:'えき',y:'りゃっか【益】をえる。',ky:'り（えき）をえる。'},
+    {k:'液',r:'えき',y:'【液】体をそそぐ。',ky:'（えき）たいをそそぐ。'},
+    {k:'演',r:'えん',y:'ぶたいで【演】じる。',ky:'ぶたいで（えん）じる。'},
+    {k:'応',r:'こた',y:'しつもんに【応】える。',ky:'しつもんに（こた）える。'},
+    {k:'往',r:'おう',y:'【往】復するきっぷ。',ky:'（おう）ふくするきっぷ。'},
+    {k:'桜',r:'さくら',y:'【桜】の花がさく。',ky:'（さくら）のはながさく。'},
+    {k:'可',r:'か',y:'きょかを【可】にする。',ky:'きょかを（か）にする。'},
+    {k:'仮',r:'かり',y:'【仮】の名前をつける。',ky:'（かり）のなまえをつける。'},
+    {k:'価',r:'あたい',y:'ものの【価】値をしる。',ky:'ものの（あたい）をしる。'},
+    {k:'河',r:'かわ',y:'大きな【河】をわたる。',ky:'おおきな（かわ）をわたる。'},
+    {k:'過',r:'す',y:'じかんが【過】ぎる。',ky:'じかんが（す）ぎる。'},
+    {k:'快',r:'かい',y:'【快】晴のひ。',ky:'（かい）せいのひ。'},
+    {k:'解',r:'と',y:'もんだいを【解】く。',ky:'もんだいを（と）く。'},
+    {k:'格',r:'かく',y:'ごう【格】する。',ky:'ごう（かく）する。'},
+    {k:'確',r:'たし',y:'じじつを【確】かめる。',ky:'じじつを（たし）かめる。'},
+    {k:'額',r:'がく',y:'大きな【額】ぶちをかざる。',ky:'おおきな（がく）ぶちをかざる。'},
+    {k:'刊',r:'かん',y:'ざっしを発【刊】する。',ky:'ざっしをはっ（かん）する。'},
+    {k:'幹',r:'みき',y:'木の【幹】がふとい。',ky:'きの（みき）がふとい。'},
+    {k:'慣',r:'な',y:'はやおきに【慣】れる。',ky:'はやおきに（な）れる。'},
+    {k:'眼',r:'め',y:'【眼】科にいく。',ky:'（め）かにいく。'},
+    {k:'基',r:'もと',y:'きそを【基】にする。',ky:'きそを（もと）にする。'},
+    {k:'寄',r:'よ',y:'としょかんに【寄】る。',ky:'としょかんに（よ）る。'},
+    {k:'規',r:'き',y:'【規】則をまもる。',ky:'（き）そくをまもる。'},
+  ],
+  6:[
+    {k:'異',r:'こと',y:'【異】なるいけん。',ky:'（こと）なるいけん。'},
+    {k:'遺',r:'い',y:'【遺】産をのこす。',ky:'（い）さんをのこす。'},
+    {k:'域',r:'いき',y:'ちい【域】をまもる。',ky:'ちい（いき）をまもる。'},
+    {k:'宇',r:'う',y:'【宇】宙をたんきゅうする。',ky:'（う）ちゅうをたんきゅうする。'},
+    {k:'映',r:'うつ',y:'スクリーンに【映】る。',ky:'スクリーンに（うつ）る。'},
+    {k:'延',r:'の',y:'じかんを【延】ばす。',ky:'じかんを（の）ばす。'},
+    {k:'沿',r:'そ',y:'かわに【沿】ってあるく。',ky:'かわに（そ）ってあるく。'},
+    {k:'我',r:'われ',y:'【我】を しのぶ。',ky:'（われ）をしのぶ。'},
+    {k:'灰',r:'はい',y:'【灰】いろのそら。',ky:'（はい）いろのそら。'},
+    {k:'拡',r:'ひろ',y:'はんいを【拡】げる。',ky:'はんいを（ひろ）げる。'},
+    {k:'革',r:'かわ',y:'【革】のくつをはく。',ky:'（かわ）のくつをはく。'},
+    {k:'閣',r:'かく',y:'ないかくをそしきする。',ky:'ない（かく）をそしきする。'},
+    {k:'割',r:'わ',y:'りんごを【割】る。',ky:'りんごを（わ）る。'},
+    {k:'株',r:'かぶ',y:'【株】をかう。',ky:'（かぶ）をかう。'},
+    {k:'干',r:'ほ',y:'せんたくものを【干】す。',ky:'せんたくものを（ほ）す。'},
+    {k:'巻',r:'ま',y:'ほんをひとつ【巻】にする。',ky:'ほんをひとつ（ま）きにする。'},
+    {k:'看',r:'かん',y:'かんご【看】をめざす。',ky:'かんご（かん）をめざす。'},
+    {k:'簡',r:'かん',y:'【簡】単なもんだい。',ky:'（かん）たんなもんだい。'},
+    {k:'危',r:'あぶ',y:'【危】ないばしょにいかない。',ky:'（あぶ）ないばしょにいかない。'},
+    {k:'机',r:'つくえ',y:'【机】のうえをかたづける。',ky:'（つくえ）のうえをかたづける。'},
+    {k:'揮',r:'き',y:'さいのうを発【揮】する。',ky:'さいのうをはっ（き）する。'},
+    {k:'貴',r:'たっと',y:'【貴】いけいけん。',ky:'（たっと）いけいけん。'},
+    {k:'疑',r:'うたが',y:'こたえを【疑】う。',ky:'こたえを（うたが）う。'},
+    {k:'吸',r:'す',y:'くうきを【吸】う。',ky:'くうきを（す）う。'},
+    {k:'供',r:'とも',y:'おやに【供】える。',ky:'おやに（とも）える。'},
+    {k:'胸',r:'むね',y:'【胸】がどきどきする。',ky:'（むね）がどきどきする。'},
+    {k:'郷',r:'きょう',y:'ふる【郷】にかえる。',ky:'ふる（きょう）にかえる。'},
+    {k:'勤',r:'つと',y:'かいしゃに【勤】める。',ky:'かいしゃに（つと）める。'},
+    {k:'筋',r:'すじ',y:'【筋】をきたえる。',ky:'（すじ）をきたえる。'},
+    {k:'敬',r:'うやま',y:'せんせいを【敬】う。',ky:'せんせいを（うやま）う。'},
+  ]
+};
+
+/* ================================================================
+   算数プール生成関数
+   ================================================================ */
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+const CALC_GEN = {
+  add_no_carry:()=>{
+    const a=rnd(1,9),b=rnd(1,9-a);
+    return {q:`${a} ＋ ${b} ＝`,a:`${a+b}`,isHissan:false};
+  },
+  sub_no_borrow:()=>{
+    const b=rnd(1,8),a=rnd(b+1,9);
+    return {q:`${a} － ${b} ＝`,a:`${a-b}`,isHissan:false};
+  },
+  add_carry:()=>{
+    let a,b;
+    do{a=rnd(2,9);b=rnd(2,9);}while(a+b<10||a+b>18);
+    return {q:`${a} ＋ ${b} ＝`,a:`${a+b}`,isHissan:false};
+  },
+  sub_borrow:()=>{
+    const ans=rnd(1,9),b=rnd(2,9);
+    const a=ans+b;
+    if(a<11||a>18)return CALC_GEN.sub_borrow();
+    return {q:`${a} － ${b} ＝`,a:`${ans}`,isHissan:false};
+  },
+  add2:()=>{
+    const a=rnd(10,89),b=rnd(10,99-a);
+    return {q:`${a} ＋ ${b} ＝`,a:`${a+b}`,isHissan:false};
+  },
+  sub2:()=>{
+    const b=rnd(10,79),a=rnd(b+1,99);
+    return {q:`${a} － ${b} ＝`,a:`${a-b}`,isHissan:false};
+  },
+  hissan_add3:()=>{
+    const a=rnd(100,699),b=rnd(100,999-a);
+    return {q:`${a} ＋ ${b} ＝`,a:`${a+b}`,isHissan:true};
+  },
+  hissan_sub3:()=>{
+    const b=rnd(100,599),a=rnd(b+100,999);
+    return {q:`${a} － ${b} ＝`,a:`${a-b}`,isHissan:true};
+  },
+  kake3:()=>{
+    const a=rnd(10,29),b=rnd(2,9);
+    return {q:`${a} × ${b} ＝`,a:`${a*b}`,isHissan:false};
+  },
+  wari3:()=>{
+    const b=rnd(2,9),ans=rnd(2,9);
+    return {q:`${b*ans} ÷ ${b} ＝`,a:`${ans}`,isHissan:false};
+  },
+  wari3_r:()=>{
+    const b=rnd(2,9),q=rnd(2,9),r=rnd(1,b-1);
+    return {q:`${b*q+r} ÷ ${b} ＝`,a:`${q} あまり ${r}`,isHissan:false};
+  },
+  bunsu3:()=>{
+    const d=rnd(2,6),n=rnd(1,d-1);
+    return {q:`<span class="frac"><span class="frac-n">${n}</span><span class="frac-d">${d}</span></span> はどちらが大きい？ <span class="frac"><span class="frac-n">1</span><span class="frac-d">${d}</span></span> と比べて`,a:`${n>1?`${n}/${d}のほうが大きい`:`1/${d}と等しい`}`,isHissan:false};
+  },
+  hissan4:()=>{
+    const a=rnd(11,49),b=rnd(11,49);
+    return {q:`${a} × ${b} ＝`,a:`${a*b}`,isHissan:true};
+  },
+  wari4:()=>{
+    const b=rnd(2,9),ans=rnd(10,19);
+    return {q:`${b*ans} ÷ ${b} ＝`,a:`${ans}`,isHissan:false};
+  },
+  shosu4:()=>{
+    const a=rnd(1,9),ad=rnd(1,9),b=rnd(1,9),bd=rnd(1,9);
+    const av=a+ad/10,bv=b+bd/10,sv=Math.round((av+bv)*10)/10;
+    return {q:`${av.toFixed(1)} ＋ ${bv.toFixed(1)} ＝`,a:`${sv.toFixed(1)}`,isHissan:false};
+  },
+  bunsu4:()=>{
+    const d=rnd(3,8),a=rnd(1,d-1),b=rnd(1,d-a);
+    return {q:`<span class="frac"><span class="frac-n">${a}</span><span class="frac-d">${d}</span></span> ＋ <span class="frac"><span class="frac-n">${b}</span><span class="frac-d">${d}</span></span> ＝`,a:`${(a+b)%d===0?Math.floor((a+b)/d):`${a+b}/${d}`}`,isHissan:false};
+  },
+  shosu5:()=>{
+    const a=rnd(1,9),ad=rnd(1,9),b=rnd(2,5);
+    const av=a+ad/10,ans=Math.round(av*b*10)/10;
+    return {q:`${av.toFixed(1)} × ${b} ＝`,a:`${ans.toFixed(1)}`,isHissan:false};
+  },
+  bunsu5:()=>{
+    // 異分母の通分足し算
+    const d1=rnd(2,5),d2=rnd(2,5);
+    if(d1===d2)return CALC_GEN.bunsu5();
+    const n1=rnd(1,d1-1),n2=rnd(1,d2-1);
+    const lcd=d1*d2,num=n1*d2+n2*d1;
+    const g=gcd(num,lcd);
+    const rn=num/g,rd=lcd/g;
+    return {q:`<span class="frac"><span class="frac-n">${n1}</span><span class="frac-d">${d1}</span></span> ＋ <span class="frac"><span class="frac-n">${n2}</span><span class="frac-d">${d2}</span></span> ＝`,a:`${rd===1?rn:`${rn}/${rd}`}`,isHissan:false};
+  },
+  wariai5:()=>{
+    const base=rnd(2,9)*10,rate=rnd(2,9);
+    return {q:`${base} の ${rate*10}％ は？`,a:`${base*rate/10}`,isHissan:false};
+  },
+  bunsu6:()=>{
+    const n=rnd(1,4),d=rnd(2,6),mult=rnd(2,4);
+    return {q:`<span class="frac"><span class="frac-n">${n}</span><span class="frac-d">${d}</span></span> × ${mult} ＝`,a:`${n*mult%d===0?n*mult/d:`${n*mult}/${d}`}`,isHissan:false};
+  },
+  hirei6:()=>{
+    const ratio1=rnd(1,5),ratio2=rnd(1,5);
+    const g2=gcd(ratio1,ratio2);
+    return {q:`${ratio1*2}：${ratio2*2} を かんたんにすると？`,a:`${ratio1/g2*2}：${ratio2/g2*2}`,isHissan:false};
+  },
+  bunsu6_mix:()=>{
+    const n=rnd(1,3),d=rnd(2,5);
+    const dec=rnd(1,3);
+    const ans=Math.round((n/d+dec)*100)/100;
+    return {q:`<span class="frac"><span class="frac-n">${n}</span><span class="frac-d">${d}</span></span> ＋ ${dec}.0 ＝`,a:`${ans}`,isHissan:false};
+  },
+};
+
+// 九九
+for(let d=2;d<=9;d++){
+  CALC_GEN[`kuku_${d}`]=(()=>{
+    const _d=d;
+    return ()=>{
+      const n=rnd(1,9);
+      return {q:`${_d} × ${n} ＝`,a:`${_d*n}`,isHissan:false};
+    };
+  })();
+}
+
+function gcd(a,b){return b===0?a:gcd(b,a%b);}
+
+/* ================================================================
+   MATH_UNITS 定義（サイドバー用）
+   ================================================================ */
+const MATH_UNITS={
+  1:[
+    {id:'add_no_carry',label:'足し算（くり上がりなし）'},
+    {id:'sub_no_borrow',label:'引き算（くり下がりなし）'},
+    {id:'add_carry',label:'足し算（くり上がりあり）'},
+    {id:'sub_borrow',label:'引き算（くり下がりあり）'},
+  ],
+  2:[
+    {id:'kuku_2',label:'九九 2の段'},{id:'kuku_3',label:'九九 3の段'},
+    {id:'kuku_4',label:'九九 4の段'},{id:'kuku_5',label:'九九 5の段'},
+    {id:'kuku_6',label:'九九 6の段'},{id:'kuku_7',label:'九九 7の段'},
+    {id:'kuku_8',label:'九九 8の段'},{id:'kuku_9',label:'九九 9の段'},
+    {id:'add2',label:'2けたの足し算'},{id:'sub2',label:'2けたの引き算'},
+  ],
+  3:[
+    {id:'hissan_add3',label:'筆算（足し算）'},
+    {id:'hissan_sub3',label:'筆算（引き算）'},
+    {id:'kake3',label:'かけ算（2けた×1けた）'},
+    {id:'wari3',label:'わり算（あまりなし）'},
+    {id:'wari3_r',label:'わり算（あまりあり）'},
+    {id:'bunsu3',label:'分数のきほん'},
+  ],
+  4:[
+    {id:'hissan4',label:'筆算（×2けた）'},
+    {id:'wari4',label:'わり算（2けた÷1けた）'},
+    {id:'shosu4',label:'小数の足し算'},
+    {id:'bunsu4',label:'分数の足し算（同分母）'},
+  ],
+  5:[
+    {id:'shosu5',label:'小数のかけ算'},
+    {id:'bunsu5',label:'分数の足し算（通分）'},
+    {id:'wariai5',label:'割合・百分率'},
+  ],
+  6:[
+    {id:'bunsu6',label:'分数×整数'},
+    {id:'hirei6',label:'比・比例'},
+    {id:'bunsu6_mix',label:'分数・小数の混合'},
+  ]
+};
+
+/* ================================================================
+   英語プール・かなプール（前バージョンから継承）
+   ================================================================ */
+const VOCAB={
+  "動物・食べ物・身の回り":[
+    {jp:"いぬ",en:"dog",r:"ドッグ"},{jp:"ねこ",en:"cat",r:"キャット"},{jp:"とり",en:"bird",r:"バード"},
+    {jp:"うさぎ",en:"rabbit",r:"ラビット"},{jp:"さかな",en:"fish",r:"フィッシュ"},{jp:"うま",en:"horse",r:"ホース"},
+    {jp:"ぞう",en:"elephant",r:"エレファント"},{jp:"くま",en:"bear",r:"ベア"},{jp:"ライオン",en:"lion",r:"ライオン"},
+    {jp:"トラ",en:"tiger",r:"タイガー"},{jp:"サル",en:"monkey",r:"マンキー"},{jp:"ペンギン",en:"penguin",r:"ペンギン"},
+    {jp:"りんご",en:"apple",r:"アップル"},{jp:"バナナ",en:"banana",r:"バナナ"},{jp:"オレンジ",en:"orange",r:"オレンジ"},
+    {jp:"いちご",en:"strawberry",r:"ストロベリー"},{jp:"ぶどう",en:"grape",r:"グレープ"},{jp:"すいか",en:"watermelon",r:"ウォーターメロン"},
+    {jp:"パン",en:"bread",r:"ブレッド"},{jp:"ごはん",en:"rice",r:"ライス"},{jp:"たまご",en:"egg",r:"エッグ"},
+    {jp:"ぎゅうにゅう",en:"milk",r:"ミルク"},{jp:"みず",en:"water",r:"ウォーター"},{jp:"ジュース",en:"juice",r:"ジュース"},
+    {jp:"にんじん",en:"carrot",r:"キャロット"},{jp:"トマト",en:"tomato",r:"トマト"},{jp:"きゅうり",en:"cucumber",r:"キューカンバー"},
+    {jp:"ボール",en:"ball",r:"ボール"},{jp:"ほん",en:"book",r:"ブック"},{jp:"かさ",en:"umbrella",r:"アンブレラ"},
+    {jp:"いす",en:"chair",r:"チェア"},{jp:"つくえ",en:"desk",r:"デスク"},{jp:"まど",en:"window",r:"ウィンドウ"},
+    {jp:"ドア",en:"door",r:"ドア"},{jp:"くつ",en:"shoes",r:"シューズ"},{jp:"ぼうし",en:"hat",r:"ハット"},
+    {jp:"シャツ",en:"shirt",r:"シャート"},{jp:"かばん",en:"bag",r:"バッグ"},{jp:"とけい",en:"clock",r:"クロック"},
+    {jp:"でんわ",en:"phone",r:"フォン"},{jp:"テレビ",en:"TV",r:"ティービー"},{jp:"いえ",en:"house",r:"ハウス"},
+  ],
+  "色・形・数字":[
+    {jp:"あか",en:"red",r:"レッド"},{jp:"あお",en:"blue",r:"ブルー"},{jp:"きいろ",en:"yellow",r:"イェロー"},
+    {jp:"みどり",en:"green",r:"グリーン"},{jp:"しろ",en:"white",r:"ホワイト"},{jp:"くろ",en:"black",r:"ブラック"},
+    {jp:"ピンク",en:"pink",r:"ピンク"},{jp:"むらさき",en:"purple",r:"パープル"},{jp:"ちゃいろ",en:"brown",r:"ブラウン"},
+    {jp:"はいいろ",en:"gray",r:"グレイ"},{jp:"まる",en:"circle",r:"サークル"},{jp:"しかく",en:"square",r:"スクエア"},
+    {jp:"さんかく",en:"triangle",r:"トライアングル"},{jp:"ほし",en:"star",r:"スター"},{jp:"ハート",en:"heart",r:"ハート"},
+    {jp:"いち",en:"one",r:"ワン"},{jp:"に",en:"two",r:"トゥー"},{jp:"さん",en:"three",r:"スリー"},
+    {jp:"し",en:"four",r:"フォー"},{jp:"ご",en:"five",r:"ファイブ"},{jp:"ろく",en:"six",r:"シックス"},
+    {jp:"なな",en:"seven",r:"セブン"},{jp:"はち",en:"eight",r:"エイト"},{jp:"きゅう",en:"nine",r:"ナイン"},
+    {jp:"じゅう",en:"ten",r:"テン"},{jp:"ひゃく",en:"hundred",r:"ハンドレッド"},{jp:"ぜろ",en:"zero",r:"ゼロ"},
+    {jp:"おおきい",en:"big",r:"ビッグ"},{jp:"ちいさい",en:"small",r:"スモール"},{jp:"ながい",en:"long",r:"ロング"},
+    {jp:"みじかい",en:"short",r:"ショート"},{jp:"たかい",en:"tall",r:"トール"},
+  ],
+  "家族・体・学校":[
+    {jp:"おかあさん",en:"mother",r:"マザー"},{jp:"おとうさん",en:"father",r:"ファーザー"},{jp:"あね",en:"sister",r:"シスター"},
+    {jp:"あに",en:"brother",r:"ブラザー"},{jp:"そぼ",en:"grandmother",r:"グランドマザー"},{jp:"そふ",en:"grandfather",r:"グランドファーザー"},
+    {jp:"ともだち",en:"friend",r:"フレンド"},{jp:"せんせい",en:"teacher",r:"ティーチャー"},{jp:"こども",en:"child",r:"チャイルド"},
+    {jp:"あたま",en:"head",r:"ヘッド"},{jp:"め",en:"eye",r:"アイ"},{jp:"はな",en:"nose",r:"ノーズ"},
+    {jp:"くち",en:"mouth",r:"マウス"},{jp:"みみ",en:"ear",r:"イヤー"},{jp:"て",en:"hand",r:"ハンド"},
+    {jp:"あし",en:"foot",r:"フット"},{jp:"かお",en:"face",r:"フェイス"},{jp:"かみ",en:"hair",r:"ヘア"},
+    {jp:"うで",en:"arm",r:"アーム"},{jp:"がっこう",en:"school",r:"スクール"},{jp:"きょうしつ",en:"classroom",r:"クラスルーム"},
+    {jp:"としょかん",en:"library",r:"ライブラリー"},{jp:"えんぴつ",en:"pencil",r:"ペンシル"},{jp:"けしごむ",en:"eraser",r:"イレイサー"},
+    {jp:"じょうぎ",en:"ruler",r:"ルーラー"},{jp:"ノート",en:"notebook",r:"ノートブック"},{jp:"クレヨン",en:"crayon",r:"クレヨン"},
+    {jp:"はさみ",en:"scissors",r:"シザーズ"},{jp:"のり",en:"glue",r:"グルー"},{jp:"ランドセル",en:"school bag",r:"スクールバッグ"},
+  ],
+  "乗り物・自然・季節":[
+    {jp:"くるま",en:"car",r:"カー"},{jp:"でんしゃ",en:"train",r:"トレイン"},{jp:"ひこうき",en:"airplane",r:"エアプレイン"},
+    {jp:"ふね",en:"ship",r:"シップ"},{jp:"じてんしゃ",en:"bicycle",r:"バイシクル"},{jp:"バス",en:"bus",r:"バス"},
+    {jp:"タクシー",en:"taxi",r:"タクシー"},{jp:"ロケット",en:"rocket",r:"ロケット"},{jp:"はな",en:"flower",r:"フラワー"},
+    {jp:"き",en:"tree",r:"トゥリー"},{jp:"くさ",en:"grass",r:"グラス"},{jp:"やま",en:"mountain",r:"マウンテン"},
+    {jp:"うみ",en:"sea",r:"シー"},{jp:"かわ",en:"river",r:"リバー"},{jp:"そら",en:"sky",r:"スカイ"},
+    {jp:"くも",en:"cloud",r:"クラウド"},{jp:"たいよう",en:"sun",r:"サン"},{jp:"つき",en:"moon",r:"ムーン"},
+    {jp:"あめ",en:"rain",r:"レイン"},{jp:"ゆき",en:"snow",r:"スノウ"},{jp:"かぜ",en:"wind",r:"ウィンド"},
+    {jp:"にじ",en:"rainbow",r:"レインボウ"},{jp:"はる",en:"spring",r:"スプリング"},{jp:"なつ",en:"summer",r:"サマー"},
+    {jp:"あき",en:"autumn",r:"オータム"},{jp:"ふゆ",en:"winter",r:"ウィンター"},{jp:"あさ",en:"morning",r:"モーニング"},
+    {jp:"よる",en:"night",r:"ナイト"},{jp:"ひ",en:"day",r:"デイ"},{jp:"いし",en:"stone",r:"ストーン"},
+  ],
+  "よく使う形容詞":[
+    {jp:"たのしい",en:"fun",r:"ファン"},{jp:"うれしい",en:"happy",r:"ハッピー"},{jp:"かなしい",en:"sad",r:"サッド"},
+    {jp:"こわい",en:"scary",r:"スケアリー"},{jp:"かわいい",en:"cute",r:"キュート"},{jp:"きれい",en:"beautiful",r:"ビューティフル"},
+    {jp:"おもしろい",en:"interesting",r:"インタレスティング"},{jp:"あたらしい",en:"new",r:"ニュー"},{jp:"ふるい",en:"old",r:"オールド"},
+    {jp:"はやい",en:"fast",r:"ファスト"},{jp:"おそい",en:"slow",r:"スロウ"},{jp:"あつい",en:"hot",r:"ホット"},
+    {jp:"つめたい",en:"cold",r:"コールド"},{jp:"あまい",en:"sweet",r:"スウィート"},{jp:"からい",en:"spicy",r:"スパイシー"},
+    {jp:"やさしい",en:"kind",r:"カインド"},{jp:"つよい",en:"strong",r:"ストロング"},{jp:"よわい",en:"weak",r:"ウィーク"},
+    {jp:"かるい",en:"light",r:"ライト"},{jp:"おもい",en:"heavy",r:"ヘビー"},{jp:"やわらかい",en:"soft",r:"ソフト"},
+    {jp:"かたい",en:"hard",r:"ハード"},{jp:"あかるい",en:"bright",r:"ブライト"},{jp:"くらい",en:"dark",r:"ダーク"},
+    {jp:"うまい",en:"delicious",r:"デリシャス"},{jp:"ひろい",en:"wide",r:"ワイド"},{jp:"せまい",en:"narrow",r:"ナロウ"},
+    {jp:"ふとい",en:"thick",r:"シック"},{jp:"ほそい",en:"thin",r:"シン"},
+  ]
+};
+
+const KANA_POOL=[
+  {type:'h2k',q:'「あ」をカタカナで',a:'ア'},{type:'h2k',q:'「い」をカタカナで',a:'イ'},
+  {type:'h2k',q:'「う」をカタカナで',a:'ウ'},{type:'h2k',q:'「え」をカタカナで',a:'エ'},
+  {type:'h2k',q:'「お」をカタカナで',a:'オ'},{type:'h2k',q:'「か」をカタカナで',a:'カ'},
+  {type:'h2k',q:'「き」をカタカナで',a:'キ'},{type:'h2k',q:'「く」をカタカナで',a:'ク'},
+  {type:'h2k',q:'「け」をカタカナで',a:'ケ'},{type:'h2k',q:'「こ」をカタカナで',a:'コ'},
+  {type:'h2k',q:'「さ」をカタカナで',a:'サ'},{type:'h2k',q:'「し」をカタカナで',a:'シ'},
+  {type:'h2k',q:'「す」をカタカナで',a:'ス'},{type:'h2k',q:'「せ」をカタカナで',a:'セ'},
+  {type:'h2k',q:'「そ」をカタカナで',a:'ソ'},{type:'h2k',q:'「た」をカタカナで',a:'タ'},
+  {type:'h2k',q:'「ち」をカタカナで',a:'チ'},{type:'h2k',q:'「つ」をカタカナで',a:'ツ'},
+  {type:'h2k',q:'「て」をカタカナで',a:'テ'},{type:'h2k',q:'「と」をカタカナで',a:'ト'},
+  {type:'h2k',q:'「な」をカタカナで',a:'ナ'},{type:'h2k',q:'「に」をカタカナで',a:'ニ'},
+  {type:'h2k',q:'「ぬ」をカタカナで',a:'ヌ'},{type:'h2k',q:'「ね」をカタカナで',a:'ネ'},
+  {type:'h2k',q:'「の」をカタカナで',a:'ノ'},{type:'h2k',q:'「は」をカタカナで',a:'ハ'},
+  {type:'h2k',q:'「ひ」をカタカナで',a:'ヒ'},{type:'h2k',q:'「ふ」をカタカナで',a:'フ'},
+  {type:'h2k',q:'「へ」をカタカナで',a:'ヘ'},{type:'h2k',q:'「ほ」をカタカナで',a:'ホ'},
+  {type:'h2k',q:'「ま」をカタカナで',a:'マ'},{type:'h2k',q:'「み」をカタカナで',a:'ミ'},
+  {type:'h2k',q:'「む」をカタカナで',a:'ム'},{type:'h2k',q:'「め」をカタカナで',a:'メ'},
+  {type:'h2k',q:'「も」をカタカナで',a:'モ'},{type:'h2k',q:'「や」をカタカナで',a:'ヤ'},
+  {type:'h2k',q:'「ゆ」をカタカナで',a:'ユ'},{type:'h2k',q:'「よ」をカタカナで',a:'ヨ'},
+  {type:'h2k',q:'「ら」をカタカナで',a:'ラ'},{type:'h2k',q:'「り」をカタカナで',a:'リ'},
+  {type:'h2k',q:'「る」をカタカナで',a:'ル'},{type:'h2k',q:'「れ」をカタカナで',a:'レ'},
+  {type:'h2k',q:'「ろ」をカタカナで',a:'ロ'},{type:'h2k',q:'「わ」をカタカナで',a:'ワ'},
+  {type:'h2k',q:'「ん」をカタカナで',a:'ン'},
+  // カタカナ→ひらがな
+  {type:'k2h',q:'「ア」をひらがなで',a:'あ'},{type:'k2h',q:'「イ」をひらがなで',a:'い'},
+  {type:'k2h',q:'「ウ」をひらがなで',a:'う'},{type:'k2h',q:'「エ」をひらがなで',a:'え'},
+  {type:'k2h',q:'「オ」をひらがなで',a:'お'},{type:'k2h',q:'「カ」をひらがなで',a:'か'},
+  {type:'k2h',q:'「キ」をひらがなで',a:'き'},{type:'k2h',q:'「ク」をひらがなで',a:'く'},
+  {type:'k2h',q:'「ケ」をひらがなで',a:'け'},{type:'k2h',q:'「コ」をひらがなで',a:'こ'},
+  {type:'k2h',q:'「サ」をひらがなで',a:'さ'},{type:'k2h',q:'「シ」をひらがなで',a:'し'},
+  {type:'k2h',q:'「ス」をひらがなで',a:'す'},{type:'k2h',q:'「セ」をひらがなで',a:'せ'},
+  {type:'k2h',q:'「ソ」をひらがなで',a:'そ'},{type:'k2h',q:'「タ」をひらがなで',a:'た'},
+  {type:'k2h',q:'「チ」をひらがなで',a:'ち'},{type:'k2h',q:'「ツ」をひらがなで',a:'つ'},
+  {type:'k2h',q:'「テ」をひらがなで',a:'て'},{type:'k2h',q:'「ト」をひらがなで',a:'と'},
+  {type:'k2h',q:'「ナ」をひらがなで',a:'な'},{type:'k2h',q:'「ニ」をひらがなで',a:'に'},
+  {type:'k2h',q:'「ヌ」をひらがなで',a:'ぬ'},{type:'k2h',q:'「ネ」をひらがなで',a:'ね'},
+  {type:'k2h',q:'「ノ」をひらがなで',a:'の'},{type:'k2h',q:'「ハ」をひらがなで',a:'は'},
+  {type:'k2h',q:'「ヒ」をひらがなで',a:'ひ'},{type:'k2h',q:'「フ」をひらがなで',a:'ふ'},
+  {type:'k2h',q:'「ヘ」をひらがなで',a:'へ'},{type:'k2h',q:'「ホ」をひらがなで',a:'ほ'},
+  {type:'k2h',q:'「マ」をひらがなで',a:'ま'},{type:'k2h',q:'「ミ」をひらがなで',a:'み'},
+  {type:'k2h',q:'「ム」をひらがなで',a:'む'},{type:'k2h',q:'「メ」をひらがなで',a:'め'},
+  {type:'k2h',q:'「モ」をひらがなで',a:'も'},{type:'k2h',q:'「ヤ」をひらがなで',a:'や'},
+  {type:'k2h',q:'「ユ」をひらがなで',a:'ゆ'},{type:'k2h',q:'「ヨ」をひらがなで',a:'よ'},
+  {type:'k2h',q:'「ラ」をひらがなで',a:'ら'},{type:'k2h',q:'「リ」をひらがなで',a:'り'},
+  {type:'k2h',q:'「ル」をひらがなで',a:'る'},{type:'k2h',q:'「レ」をひらがなで',a:'れ'},
+  {type:'k2h',q:'「ロ」をひらがなで',a:'ろ'},{type:'k2h',q:'「ワ」をひらがなで',a:'わ'},
+  {type:'k2h',q:'「ン」をひらがなで',a:'ん'},
+  // 濁音
+  {type:'h2k',q:'「が」をカタカナで',a:'ガ'},{type:'h2k',q:'「ぎ」をカタカナで',a:'ギ'},
+  {type:'h2k',q:'「ぐ」をカタカナで',a:'グ'},{type:'h2k',q:'「げ」をカタカナで',a:'ゲ'},
+  {type:'h2k',q:'「ご」をカタカナで',a:'ゴ'},{type:'h2k',q:'「ざ」をカタカナで',a:'ザ'},
+  {type:'h2k',q:'「じ」をカタカナで',a:'ジ'},{type:'h2k',q:'「ず」をカタカナで',a:'ズ'},
+  {type:'h2k',q:'「ぜ」をカタカナで',a:'ゼ'},{type:'h2k',q:'「ぞ」をカタカナで',a:'ゾ'},
+  {type:'h2k',q:'「だ」をカタカナで',a:'ダ'},{type:'h2k',q:'「で」をカタカナで',a:'デ'},
+  {type:'h2k',q:'「ど」をカタカナで',a:'ド'},{type:'h2k',q:'「ば」をカタカナで',a:'バ'},
+  {type:'h2k',q:'「び」をカタカナで',a:'ビ'},{type:'h2k',q:'「ぶ」をカタカナで',a:'ブ'},
+  {type:'h2k',q:'「べ」をカタカナで',a:'ベ'},{type:'h2k',q:'「ぼ」をカタカナで',a:'ボ'},
+  {type:'k2h',q:'「ガ」をひらがなで',a:'が'},{type:'k2h',q:'「ギ」をひらがなで',a:'ぎ'},
+  {type:'k2h',q:'「グ」をひらがなで',a:'ぐ'},{type:'k2h',q:'「ゲ」をひらがなで',a:'げ'},
+  {type:'k2h',q:'「ゴ」をひらがなで',a:'ご'},{type:'k2h',q:'「ザ」をひらがなで',a:'ざ'},
+  {type:'k2h',q:'「ジ」をひらがなで',a:'じ'},{type:'k2h',q:'「ズ」をひらがなで',a:'ず'},
+  {type:'k2h',q:'「バ」をひらがなで',a:'ば'},{type:'k2h',q:'「ビ」をひらがなで',a:'び'},
+  {type:'k2h',q:'「ブ」をひらがなで',a:'ぶ'},{type:'k2h',q:'「ベ」をひらがなで',a:'べ'},
+  {type:'k2h',q:'「ボ」をひらがなで',a:'ぼ'},
+  // 半濁音
+  {type:'h2k',q:'「ぱ」をカタカナで',a:'パ'},{type:'h2k',q:'「ぴ」をカタカナで',a:'ピ'},
+  {type:'h2k',q:'「ぷ」をカタカナで',a:'プ'},{type:'h2k',q:'「ぺ」をカタカナで',a:'ペ'},
+  {type:'h2k',q:'「ぽ」をカタカナで',a:'ポ'},
+  {type:'k2h',q:'「パ」をひらがなで',a:'ぱ'},{type:'k2h',q:'「ピ」をひらがなで',a:'ぴ'},
+  {type:'k2h',q:'「プ」をひらがなで',a:'ぷ'},{type:'k2h',q:'「ペ」をひらがなで',a:'ぺ'},
+  {type:'k2h',q:'「ポ」をひらがなで',a:'ぽ'},
+  // 促音
+  {type:'soku',q:'正しく書こう：きって（小さい「っ」）',a:'きって'},
+  {type:'soku',q:'正しく書こう：きっぷ（小さい「っ」）',a:'きっぷ'},
+  {type:'soku',q:'正しく書こう：ざっし（小さい「っ」）',a:'ざっし'},
+  {type:'soku',q:'正しく書こう：はっぱ（小さい「っ」）',a:'はっぱ'},
+  {type:'soku',q:'正しく書こう：もっと（小さい「っ」）',a:'もっと'},
+  {type:'soku',q:'正しく書こう：ロケット（小さい「ッ」）',a:'ロケット'},
+  // 拗音
+  {type:'you',q:'正しく書こう：きゃく（小さい「ゃ」）',a:'きゃく'},
+  {type:'you',q:'正しく書こう：しゃしん（小さい「ゃ」）',a:'しゃしん'},
+  {type:'you',q:'正しく書こう：りょこう（小さい「ょ」）',a:'りょこう'},
+  {type:'you',q:'正しく書こう：びょういん（小さい「ょ」）',a:'びょういん'},
+  {type:'you',q:'正しく書こう：じゅぎょう（小さい「ゅ」）',a:'じゅぎょう'},
+  {type:'you',q:'正しく書こう：キャラクター（小さい「ャ」）',a:'キャラクター'},
+  {type:'you',q:'正しく書こう：ジュース（小さい「ュ」）',a:'ジュース'},
+  {type:'you',q:'正しく書こう：ショッピング（小さい「ョ」）',a:'ショッピング'},
+];
+
+/* ================================================================
+   STATE
+   ================================================================ */
+let subject='kanji',gradeNum=1;
+let selectedUnits=new Set();
+let selectedGenres=new Set(['動物・食べ物・身の回り','色・形・数字']);
+let engMode='tracing';
+
+/* ================================================================
+   EVENTS
+   ================================================================ */
+document.querySelectorAll('.stab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.stab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');subject=b.dataset.s;updateUI();
+  });
+});
+document.querySelectorAll('.gpill').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(b.classList.contains('disabled'))return;
+    document.querySelectorAll('.gpill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');gradeNum=parseInt(b.dataset.g);selectedUnits=new Set();updateUI();
+  });
+});
+document.querySelectorAll('.eopt').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.eopt').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');engMode=b.dataset.e;
+  });
+});
+document.getElementById('gen-btn').addEventListener('click',generate);
+
+function updateUI(){
+  document.querySelectorAll('.gpill').forEach(b=>{
+    const gn=parseInt(b.dataset.g);
+    if(subject==='kana'&&gn>1){
+      b.classList.add('disabled');
+      if(b.classList.contains('active')){
+        b.classList.remove('active');
+        document.querySelector('.gpill[data-g="1"]').classList.add('active');
+        gradeNum=1;
+      }
+    } else b.classList.remove('disabled');
+  });
+  const isCalc=subject==='keisan';
+  document.getElementById('calc-sec').style.display=isCalc?'':'none';
+  if(isCalc)renderUnitList();
+  const isEng=subject==='english';
+  document.getElementById('eng-genre-sec').style.display=isEng?'':'none';
+  document.getElementById('eng-mode-sec').style.display=isEng?'':'none';
+  if(isEng)renderGenreList();
+}
+
+function renderUnitList(){
+  const units=MATH_UNITS[gradeNum]||[];
+  const el=document.getElementById('unit-list');
+  el.innerHTML='';
+  if(selectedUnits.size===0&&units.length>0)selectedUnits.add(units[0].id);
+  units.forEach(u=>{
+    const active=selectedUnits.has(u.id);
+    const d=document.createElement('div');
+    d.className='ucheck'+(active?' active':'');
+    d.innerHTML=`<div class="ck">${active?'✓':''}</div>${u.label}`;
+    d.addEventListener('click',()=>{
+      if(selectedUnits.has(u.id)){if(selectedUnits.size===1)return;selectedUnits.delete(u.id);d.classList.remove('active');d.querySelector('.ck').textContent='';}
+      else{selectedUnits.add(u.id);d.classList.add('active');d.querySelector('.ck').textContent='✓';}
+    });
+    el.appendChild(d);
+  });
+}
+
+function renderGenreList(){
+  const el=document.getElementById('genre-list');el.innerHTML='';
+  Object.keys(VOCAB).forEach(g=>{
+    const active=selectedGenres.has(g);
+    const d=document.createElement('div');
+    d.className='gcheck'+(active?' active':'');
+    d.innerHTML=`<div class="ck">${active?'✓':''}</div>${g}`;
+    d.addEventListener('click',()=>{
+      if(selectedGenres.has(g)){if(selectedGenres.size===1)return;selectedGenres.delete(g);d.classList.remove('active');d.querySelector('.ck').textContent='';}
+      else{selectedGenres.add(g);d.classList.add('active');d.querySelector('.ck').textContent='✓';}
+    });
+    el.appendChild(d);
+  });
+}
+
+/* ================================================================
+   GENERATE（全科目プールベース・AIなし）
+   ================================================================ */
+function generate(){
+  const pages=parseInt(document.getElementById('pages-sel').value);
+  const count=parseInt(document.getElementById('count-sel').value);
+  const main=document.getElementById('main-area');
+
+  try{
+    let results;
+    if(subject==='kanji') results=genKanjiPages(pages,count);
+    else if(subject==='keisan') results=genKeisanPages(pages,count);
+    else if(subject==='english') results=genEnglishPages(pages,count);
+    else results=genKanaPages(pages,count);
+    renderDrills(results);
+  }catch(e){
+    main.innerHTML=`<div class="error-box">⚠️ 生成に失敗しました：${e.message}</div>`;
+  }
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function genKanjiPages(pages,count){
+  const pool=shuffle(KANJI[gradeNum]||[]);
+  const results=[];let idx=0;
+  for(let p=0;p<pages;p++){
+    const qs=[];
+    const half=Math.floor(count/2);
+    // yomi問題
+    for(let i=0;i<half;i++){
+      const k=pool[idx%pool.length];idx++;
+      qs.push({type:'yomi',q:k.y,a:k.r});
+    }
+    // kaki問題
+    for(let i=0;i<count-half;i++){
+      const k=pool[idx%pool.length];idx++;
+      qs.push({type:'kaki',q:k.ky,a:k.k});
+    }
+    results.push({questions:qs});
+  }
+  return results;
+}
+
+function genKeisanPages(pages,count){
+  const unitIds=Array.from(selectedUnits);
+  const results=[];
+  for(let p=0;p<pages;p++){
+    const qs=[];
+    for(let i=0;i<count;i++){
+      const uid=unitIds[i%unitIds.length];
+      const gen=CALC_GEN[uid];
+      if(gen) qs.push(gen());
+    }
+    results.push({questions:qs});
+  }
+  return results;
+}
+
+function genEnglishPages(pages,count){
+  let pool=[];
+  Array.from(selectedGenres).forEach(g=>{if(VOCAB[g])pool=pool.concat(VOCAB[g]);});
+  const seen=new Set();
+  pool=pool.filter(w=>{if(seen.has(w.en))return false;seen.add(w.en);return true;});
+  pool=shuffle(pool);
+  const results=[];let idx=0;
+  for(let p=0;p<pages;p++){
+    const qs=[];
+    for(let q=0;q<count;q++){if(idx>=pool.length)idx=0;qs.push({jp:pool[idx].jp,en:pool[idx].en,reading:pool[idx].r});idx++;}
+    results.push({questions:qs});
+  }
+  return results;
+}
+
+function genKanaPages(pages,count){
+  const pool=shuffle(KANA_POOL);
+  const results=[];let idx=0;
+  for(let p=0;p<pages;p++){
+    const qs=[];
+    for(let q=0;q<count;q++){if(idx>=pool.length)idx=0;qs.push(pool[idx++]);}
+    results.push({questions:qs});
+  }
+  return results;
+}
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function renderDrills(results){
+  const main=document.getElementById('main-area');
+  const sLabel={kanji:'漢字',keisan:'算数',english:'英単語',kana:'ひらがな・かたかな'}[subject];
+  let html=`<div class="toolbar">
+    <div class="toolbar-title">📄 ${results.length}ページのドリルが完成！（${sLabel} 小${gradeNum}年生）</div>
+    <button class="print-btn" onclick="window.print()">🖨️ A4印刷</button>
+  </div>`;
+  results.forEach((data,pi)=>{
+    html+=`<div class="drill-page">
+      <div class="page-label">ページ ${pi+1} ／ ${results.length}</div>
+      <div class="drill-title-row">
+        <span class="drill-name">${sLabel}ドリル｜小${gradeNum}年生</span>
+        <span class="score-box">なまえ：＿＿＿＿＿＿　てん：＿＿＿</span>
+      </div>`;
+    if(subject==='kanji') html+=renderKanji(data.questions);
+    else if(subject==='keisan') html+=renderKeisan(data.questions);
+    else if(subject==='english') html+=renderEnglish(data.questions);
+    else html+=renderKana(data.questions);
+    html+=`</div>`;
+  });
+  main.innerHTML=html;
+}
+
+function renderKanji(qs){
+  const yomi=qs.filter(q=>q.type==='yomi');
+  const kaki=qs.filter(q=>q.type==='kaki');
+  let h='';
+  if(yomi.length){
+    h+=`<div class="k-sec"><div class="drill-instr">📖 次の漢字をひらがなで書きましょう</div>`;
+    yomi.forEach((q,i)=>{
+      const qt=q.q.replace(/【(.+?)】/g,`<span style="font-weight:700;color:#c2410c">$1</span><span class="blank"></span>`);
+      h+=`<div class="k-row"><span class="qn">${i+1}.</span><span class="qt">${qt}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  if(kaki.length){
+    h+=`<div class="k-sec" style="margin-top:14px"><div class="drill-instr blue">✏️ 次のひらがなを漢字で書きましょう</div>`;
+    kaki.forEach((q,i)=>{
+      const qt=q.q.replace(/（(.+?)）/g,`<span style="color:#1d4ed8">（$1）</span><span class="blank"></span>`);
+      h+=`<div class="k-row"><span class="qn">${yomi.length+i+1}.</span><span class="qt">${qt}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+
+function renderKeisan(qs){
+  const fs=gradeNum<=2?'1.18rem':gradeNum<=4?'1.05rem':'0.98rem';
+  const pd=gradeNum<=2?'9px 0':gradeNum<=4?'7px 0':'5px 0';
+  const normalQs=qs.filter(q=>!q.isHissan);
+  const hissanQs=qs.filter(q=>q.isHissan);
+  let h='';
+  if(normalQs.length){
+    h+=`<div class="drill-instr green">🔢 計算しましょう</div><div class="calc-grid">`;
+    normalQs.forEach((q,i)=>{
+      h+=`<div class="c-row" style="font-size:${fs};padding:${pd}">
+        <span class="qn">${i+1}.</span>
+        <span class="formula">${q.q} <span class="ans-line"></span></span>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  if(hissanQs.length){
+    const n=hissanQs.length;
+    // 最大3列。少ない場合は2列
+    const cols = n<=2 ? 2 : 3;
+    const cardFs = n<=4 ? '0.95rem' : '0.82rem';
+    const spaceH = gradeNum<=3?'68px' : gradeNum<=4?'76px' : '84px';
+    h+=`<div class="drill-instr green" style="margin-top:${normalQs.length?'14px':'0'}">📐 筆算で計算しましょう</div>
+    <div class="hissan-grid" style="grid-template-columns:repeat(${cols},1fr)">`;
+    hissanQs.forEach((q,i)=>{
+      h+=`<div class="hissan-card">
+        <div class="qn-lbl">${normalQs.length+i+1}.</div>
+        <div class="hissan-problem" style="font-size:${cardFs}">${q.q}</div>
+        <div class="dot-grid" style="height:${spaceH}"></div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+
+function renderEnglish(qs){
+  let h='';
+  if(engMode==='tracing'){
+    h+=`<div class="drill-instr purple">📝 日本語を見て、英語をなぞって書きましょう</div>`;
+    qs.forEach((q,i)=>{
+      h+=`<div class="e-row"><span class="qn">${i+1}.</span><span class="jp">${q.jp}</span>
+        <div style="flex:1"><div class="tracing-guide">${q.en}</div><span class="tracing-reading">${q.reading}</span></div></div>`;
+    });
+  } else if(engMode==='furigana'){
+    h+=`<div class="drill-instr purple">📝 日本語を見て、英語を書きましょう（よみがなを参考に）</div>`;
+    qs.forEach((q,i)=>{
+      h+=`<div class="e-row"><span class="qn">${i+1}.</span><span class="jp">${q.jp}</span>
+        <div class="furi-wrap"><span class="furi-r">${q.reading}</span><span class="furi-line"></span></div></div>`;
+    });
+  } else {
+    h+=`<div class="drill-instr purple">📝 日本語を見て、英語を書きましょう</div>`;
+    qs.forEach((q,i)=>{
+      h+=`<div class="e-row"><span class="qn">${i+1}.</span><span class="jp">${q.jp}</span><div class="write-line"></div></div>`;
+    });
+  }
+  return h;
+}
+
+function renderKana(qs){
+  let h=`<div class="drill-instr pink">🌸 ひらがな・カタカナの練習をしましょう</div>`;
+  qs.forEach((q,i)=>{
+    h+=`<div class="kana-row"><span class="qn">${i+1}.</span>
+      <span class="kt">${q.q} → <span class="blank"></span>（こたえ：${q.a}）</span></div>`;
+  });
+  return h;
+}
+
+updateUI();
+</script>
+</body>
+</html>
